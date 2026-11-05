@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="theme-color" content="#d5eeff" />
+  <meta name="description" content="손동작으로 돌아가는 어린 시절의 비눗방울 놀이" />
+  <title>작은 비눗방울의 날</title>
+  <!-- Approved V4 typefaces: intentionally unchanged. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Gaegu:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="world" class="world" data-scene="illustration">
+    <div class="illustration" aria-hidden="true"></div>
+    <div class="soap-background" aria-hidden="true"></div>
+    <div class="first-game-background" aria-hidden="true"></div>
+    <!-- Stage 2 is visually IDENTICAL to the first game stage (unchanged Bubble Bath-2.png). -->
+    <div class="reverse-background" aria-hidden="true"></div>
+    <div class="giant-background" aria-hidden="true"></div>
+    <!-- One webcam feeds two separate MediaPipe Hand Landmarker detectors; webcam image is NEVER displayed. -->
+    <video id="webcam" class="webcam" autoplay muted playsinline aria-label="웹캠 영상"></video>
+    <div class="camera-wash" aria-hidden="true"></div>
+    <canvas id="gameCanvas" aria-hidden="true"></canvas>
+
+    <section id="permissionScreen" class="layer" aria-label="카메라 사용 권한">
+      <div class="paper-box permission-box">
+        <h1>작은 비눗방울의 날</h1>
+        <p class="sentence">손끝으로 어린 시절의 비눗방울을 다시 만나 볼까요?</p>
+        <button id="allowCamera" class="paper-button" type="button">카메라 허용하기</button>
+        <p id="cameraWarning" class="warning sentence" role="status" aria-live="polite" hidden></p>
+      </div>
+    </section>
+
+    <section id="navigationScreen" class="layer" aria-label="손가락으로 클릭하는 방법" hidden>
+      <div class="paper-box navigation-card">
+        <h2>검지로 0.25초 동안 선택해요!</h2>
+        <canvas id="navGuideDemo" width="360" height="200" aria-hidden="true"></canvas>
+        <p class="sentence">분홍색 점이 검지 끝에 따라와요.</p>
+        <p class="sentence">검지를 버튼 위에 0.25초 동안 올려두면 자동으로 클릭돼요!</p>
+        <p class="sentence">모든 버튼은 검지로 선택하고, 비눗방울은 엄지와 검지로 터뜨려요.</p>
+        <button id="navGuideContinue" class="paper-button" type="button">알겠어요!</button>
+      </div>
+    </section>
+
+    <section id="storyScreen" class="layer" aria-label="어린 시절의 이야기" hidden>
+      <div class="paper-box intro-box">
+        <h2>어릴 적 기억나요?</h2>
+        <p class="sentence">비누로 거품을 만들며 놀던 날을 기억하나요?</p>
+        <button id="storyStart" class="paper-button" type="button">기억 속으로 들어가기</button>
+      </div>
+    </section>
+
+    <section id="profileScreen" class="layer" aria-label="이름과 나이 입력" hidden>
+      <form id="profileForm" class="paper-box form-box" novalidate>
+        <h2>몇 살 때로 돌아가고 싶어요?</h2>
+        <label for="playerName">이름을 알려 주세요.</label>
+        <input id="playerName" type="text" maxlength="12" placeholder="이름" autocomplete="off" />
+        <label for="playerAge">돌아가고 싶은 나이를 입력해 주세요.</label>
+        <div class="age-box">
+          <input id="playerAge" type="text" inputmode="numeric" maxlength="2" placeholder="7" autocomplete="off" aria-describedby="ageHint" />
+          <span>살</span><small id="ageHint">10살까지 입력할 수 있어요.</small>
+        </div>
+        <button class="paper-button" type="submit">그때로 가 볼까요?</button>
+      </form>
+    </section>
+
+    <section id="memoryScreen" class="layer" aria-label="어린 시절로 이동 중" hidden>
+      <div class="paper-box memory-card"><h2 id="memoryText" class="sentence">어린 시절의 세계로 들어가고 있어요...</h2></div>
+    </section>
+
+    <section id="playScreen" class="play-layer" aria-label="비눗방울 놀이" hidden>
+      <div id="soap" class="soap" role="img" aria-label="손으로 움직이는 비누" hidden>
+        <img src="./assets/soap.png" alt="분홍색 비누" draggable="false" />
+        <span class="soap-ask">나를 끌어 줘!</span>
+      </div>
+      <div id="soapMeter" class="soap-meter" hidden><span>거품을 만들고 있어요. <b id="soapPercent">0%</b></span><i><em id="soapFill"></em></i></div>
+      <div id="activeControls" class="mini-controls" hidden>
+        <button id="pauseBtn" class="sketch-tab" type="button">일시정지</button>
+        <button id="playBtn" class="sketch-tab" type="button" disabled>계속하기</button>
+        <button id="restartBtn" class="sketch-tab" type="button">다시 시작</button>
+        <button id="backStageBtn" class="sketch-tab" type="button">이전 단계</button>
+      </div>
+      <div id="runHistory" class="run-history" hidden>
+        <div class="record-heading">최고 기록</div>
+        <div class="record-columns"><span>이름</span><span>점수</span></div>
+        <div id="recordEntries" class="record-entries"></div>
+      </div>
+      <div id="scoreHud" class="score-cloud" hidden><span>점수</span><strong id="scoreValue">0</strong><small id="stageName">내 비눗방울</small></div>
+      <div id="timerHud" class="timer-cloud" hidden>남은 시간 <strong id="timeValue">20</strong>초</div>
+      <div id="gameHint" class="little-caption" hidden></div>
+    </section>
+
+    <div id="pausedOverlay" class="paused-overlay" hidden>
+      <div class="paper-box paused-card"><h2>잠깐 쉬어요!</h2><p>계속하기를 누르면 다시 시작할 수 있어요.</p></div>
+    </div>
+
+    <section id="colorScreen" class="layer" aria-label="비눗방울 색깔 선택" hidden>
+      <div class="paper-box selection-card">
+        <div class="color-layout">
+          <div class="color-options">
+            <h2 class="sentence">네 비눗방울 색깔을 골라 봐요!</h2>
+            <div class="colors" id="colors">
+              <button type="button" class="color-chip selected" data-color="#79c3e3" aria-label="하늘색"><span class="color-dot" style="--dot:#79c3e3"></span>하늘</button>
+              <button type="button" class="color-chip" data-color="#f49aaa" aria-label="분홍색"><span class="color-dot" style="--dot:#f49aaa"></span>분홍</button>
+              <button type="button" class="color-chip" data-color="#d0b1ed" aria-label="보라색"><span class="color-dot" style="--dot:#d0b1ed"></span>보라</button>
+              <button type="button" class="color-chip" data-color="#a5d99c" aria-label="초록색"><span class="color-dot" style="--dot:#a5d99c"></span>초록</button>
+              <button type="button" class="color-chip custom-chip" id="customColorButton">다른 색</button>
+              <button type="button" class="color-chip random-chip" id="randomColorButton">랜덤 색</button>
+            </div>
+            <div class="extra-colors" id="extraColors" hidden aria-label="더 많은 색깔">
+              <button class="extra-color" type="button" data-color="#fac5e5" aria-label="연분홍" style="--extra:#fac5e5"></button>
+              <button class="extra-color" type="button" data-color="#ffb2a0" aria-label="살구" style="--extra:#ffb2a0"></button>
+              <button class="extra-color" type="button" data-color="#eec86e" aria-label="노랑" style="--extra:#eec86e"></button>
+              <button class="extra-color" type="button" data-color="#b3df80" aria-label="연두" style="--extra:#b3df80"></button>
+              <button class="extra-color" type="button" data-color="#70d0b5" aria-label="민트" style="--extra:#70d0b5"></button>
+              <button class="extra-color" type="button" data-color="#5d9bd3" aria-label="파랑" style="--extra:#5d9bd3"></button>
+              <button class="extra-color" type="button" data-color="#a5a8ff" aria-label="연보라" style="--extra:#a5a8ff"></button>
+              <button class="extra-color" type="button" data-color="#fa90a0" aria-label="진분홍" style="--extra:#fa90a0"></button>
+              <button class="extra-color" type="button" data-color="#cb9b6f" aria-label="갈색" style="--extra:#cb9b6f"></button>
+              <button class="extra-color" type="button" data-color="#e7d7e9" aria-label="흰보라" style="--extra:#e7d7e9"></button>
+            </div>
+            <button id="chooseColor" class="paper-button" type="button">이 색깔로 할게요!</button>
+          </div>
+          <div class="bubble-preview-area" aria-label="선택 색깔 미리보기"><div id="bubblePreviewFloat" class="bubble-preview-float"><canvas id="bubblePreviewCanvas" width="320" height="320" role="img" aria-label="실시간 비눗방울 색깔 미리보기"></canvas></div><p id="randomPreviewPlaceholder" class="random-preview-placeholder" hidden>색깔은 확인 후 공개돼요.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="messageScreen" class="layer" aria-label="놀이 안내" hidden>
+      <div class="paper-box message-card"><h2 id="messageTitle" class="sentence"></h2><div id="messageBody" class="message-body"></div><canvas id="gestureDemo" class="gesture-demo" width="400" height="250" aria-hidden="true" hidden></canvas><button id="messageContinue" class="paper-button" type="button">시작하기</button></div>
+    </section>
+
+    <!-- 3.5-second pinch-only tutorial; automatically and reliably disappears before countdown. -->
+    <section id="gestureGuide" class="gesture-guide" role="status" aria-label="손가락 동작 안내" hidden>
+      <div class="paper-box gesture-guide-card">
+        <h2>엄지와 검지로 터뜨려요!</h2>
+        <div class="gesture-guide-grid">
+          <div class="gesture-guide-way">
+            <canvas id="guidePinch" width="320" height="210" aria-hidden="true"></canvas>
+            <strong>엄지와 검지를 붙여 주세요!</strong>
+          </div>
+        </div>
+        <p class="guide-footer">비눗방울 위에서 엄지와 검지를 붙이면 터져요.</p>
+        <div class="guide-progress-track"><span class="guide-progress-fill" id="guideProgress"></span></div>
+      </div>
+    </section>
+
+    <section id="resultScreen" class="layer" aria-label="최종 기록" hidden>
+      <div class="paper-box result-card">
+        <h2 id="finalPlayer">오늘의 기록</h2>
+        <p class="final-total">오늘의 총점 <strong id="finalTotalScore">0</strong>점</p>
+        <p id="finalRank" class="final-rank">현재 최고 기록 순위</p>
+        <div class="full-ranking" aria-label="모든 플레이어의 최고 점수">
+          <div class="full-ranking-head"><span>순위</span><span>이름</span><span>점수</span></div>
+          <div id="finalRankingList" class="full-ranking-list"></div>
+        </div>
+        <div class="result-buttons">
+          <button id="goHome" class="paper-button" type="button">다시 놀기</button>
+          <button id="restartAll" class="paper-button" type="button">처음부터 시작하기</button>
+        </div>
+      </div>
+    </section>
+
+    <button id="homeResetBtn" class="paper-button small home-reset-button" type="button" hidden>집으로 들어가기</button>
+
+    <div id="backTransition" class="back-transition" aria-live="polite" hidden>
+      <div id="backTransitionBubbles" class="back-transition-bubbles" aria-hidden="true"></div>
+      <div class="paper-box back-transition-card"><p id="backTransitionMessage">이전 단계로 돌아가고 있어요...</p></div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <div id="thumbMarker" class="finger-marker thumb-marker" hidden aria-hidden="true"></div>
+    <div id="indexMarker" class="finger-marker index-marker" hidden aria-hidden="true"></div>
+  </main>
+  <script type="module" src="./game.js"></script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+/* Little Bubble Days V7 — restored the original rounded handmade UI and click behavior; selected palette retained. */
+:root{--title:#1c669e;--text:#5ab9f2;--button:#1c669e;--paper:#f6faff;--border:#2b2828;--font:'Gaegu','Gowun Dodum',sans-serif;--tint-strength:.14}
+*{box-sizing:border-box}
+html,body{width:100%;height:100%;margin:0;overflow:hidden}
+body{font-family:var(--font);color:var(--text);background:#d4edff}
+button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px dashed var(--title);outline-offset:3px}
+[hidden]{display:none!important}
+.world{position:relative;isolation:isolate;width:100%;height:100vh;height:100dvh;overflow:hidden;touch-action:none}
+.illustration,.soap-background,.first-game-background,.reverse-background,.giant-background,.webcam,.camera-wash,#gameCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.illustration,.soap-background,.first-game-background,.reverse-background,.giant-background{z-index:0;background-position:center;background-size:cover;background-repeat:no-repeat;opacity:0;transition:opacity .25s}
+.illustration{background-image:url('./assets/Bubble Bath.png')}
+.soap-background{background-image:url('./assets/soap backhround.png')}
+.first-game-background{background-image:url('./assets/Bubble Bath-2.png')}
+.reverse-background{background-image:url('./assets/Bubble Bath-2.png')}
+.giant-background{background-image:url('./assets/Bubble Bath-2.png')}
+.world[data-scene="illustration"] .illustration{opacity:1}
+.world[data-scene="soap"] .soap-background{opacity:1}
+.world[data-scene="my"] .first-game-background{opacity:1}
+.world[data-scene="reverse"] .reverse-background{opacity:1}
+.world[data-scene="giant"] .giant-background{opacity:1}
+.webcam{z-index:1;object-fit:cover;transform:scaleX(-1);opacity:0}
+/* The webcam stays active for hand tracking but never becomes visible. */
+/* No scene reveals the live camera image. */
+.camera-wash{z-index:2;opacity:0;background:linear-gradient(120deg,#afdfee,#f6cfdf 54%,#d8e9ed)}
+
+#gameCanvas{z-index:3}
+.layer{position:absolute;z-index:15;inset:0;display:flex;justify-content:center;align-items:center;padding:14px;overflow:auto;background:rgba(205,237,253,.025)}
+/* Content-based width, centered uniformly, slightly uneven pencil-drawn edges. */
+.paper-box{position:relative;flex:none;width:min(510px,94vw);min-width:0;max-width:calc(100vw - 28px);max-height:calc(100dvh - 32px);overflow:auto;padding:clamp(21px,3.5vw,35px);text-align:center;background:var(--paper);border:3px solid var(--border);border-radius:32px 23px 29px 18px;box-shadow:5px 8px 0 #80665050,0 22px 80px #4a6f7547}
+/* Straight horizontal/vertical graphite strokes. The PNG has natural pencil-grain but no scalloped or wavy frame geometry. */
+.paper-box h1,.paper-box h2{font-size:clamp(27px,3.4vw,48px);line-height:1.16;margin:0 0 13px;color:var(--title);font-weight:700}
+.paper-box p{font-size:clamp(18px,2vw,27px);line-height:1.35;margin:9px 0 15px;color:var(--text)}
+.sentence{white-space:nowrap;max-width:100%;}
+.permission-box,.intro-box,.memory-card,.message-card{width:max-content}
+.paper-button{position:relative;z-index:1;display:inline-flex;align-items:center;justify-content:center;min-height:54px;padding:9px 27px;margin:12px 3px 3px;color:var(--button);background:var(--paper);border:3px solid var(--border);border-radius:28px 31px 24px 33px;font-size:clamp(20px,2.2vw,27px);font-weight:700;box-shadow:3px 4px 0 #9278687a;transition:transform .12s,box-shadow .12s}
+.paper-button:hover{transform:translateY(-2px) rotate(-.5deg)}
+.paper-button.clicked,.paper-button:active{transform:translate(2px,3px);box-shadow:none}
+.paper-button.small{min-height:43px;padding:6px 13px;font-size:20px;margin:6px 3px}
+.paper-button:disabled{opacity:.7;cursor:default}
+.warning{color:#d05b6a!important;font-size:19px!important;margin:11px 0 0!important}
+.form-box{text-align:left}
+.form-box h2{text-align:center;white-space:nowrap}
+.form-box label{display:block;margin:15px 0 6px;color:var(--title);font-size:23px;font-weight:700;white-space:nowrap}
+.form-box input{width:100%;display:block;padding:9px 15px;background:#fffdf6;border:2px solid var(--border);border-radius:16px;color:var(--title);font-size:26px}
+.age-box{display:flex;align-items:center;gap:9px}.age-box input{width:85px;text-align:center}.age-box>span{font-size:25px}.age-box small{font-size:16px;white-space:nowrap}
+.form-box .paper-button{display:flex;margin:23px auto 0}
+.memory-card h2{margin:0}
+.play-layer{position:absolute;z-index:8;inset:0;pointer-events:none}
+.soap{position:absolute;z-index:9;left:50%;top:42%;width:clamp(158px,19vw,265px);transform:translate(-50%,-50%) rotate(-5deg);user-select:none;pointer-events:none;filter:drop-shadow(6px 12px 6px rgba(66,82,105,.32));transition:scale .85s ease,opacity .85s ease}
+.soap img{display:block;width:100%;height:auto;pointer-events:none}
+.soap.vanish{scale:.035;opacity:0}
+.soap-ask{position:absolute;top:-42px;left:50%;transform:translateX(-50%);border:2px solid var(--border);background:var(--paper);border-radius:23px;color:var(--title);font-size:clamp(20px,2vw,27px);font-weight:700;padding:3px 14px;white-space:nowrap;box-shadow:2px 3px 0 #b58b7d55}
+.soap-meter{position:absolute;left:50%;bottom:10%;transform:translateX(-50%);z-index:10;border:2px solid var(--border);background:var(--paper);border-radius:19px;padding:8px 15px;font-size:20px;text-align:center;white-space:nowrap;color:var(--title)}
+.soap-meter i{display:block;background:#d6ecfa;height:8px;width:210px;border-radius:8px;overflow:hidden;margin-top:5px}.soap-meter em{display:block;width:0;height:100%;background:#f49aaa;transition:width .15s}
+.mini-controls{position:absolute;top:15px;left:15px;z-index:9;display:flex;align-items:center;gap:8px}
+.sketch-tab,.camera-indicator{padding:6px 11px;background:var(--paper);border:2px solid var(--border);border-radius:18px;color:var(--title);font-size:20px}.camera-indicator{font-size:17px}
+.score-cloud,.timer-cloud{position:absolute;right:16px;z-index:9;background:var(--paper);border:2px solid var(--border);color:var(--title);text-align:center;padding:7px 17px}.score-cloud{border-radius:42% 50% 48% 43%;box-shadow:3px 4px #8c777d44}.timer-cloud{border-radius:20px}
+.score-cloud{top:12px;min-width:116px}.score-cloud span,.score-cloud small{display:block}.score-cloud span{font-size:19px}.score-cloud small{font-size:15px}.score-cloud strong{display:block;font-size:44px;line-height:1}
+.timer-cloud{top:125px;font-size:21px}.timer-cloud strong{font-size:31px}
+.little-caption{position:absolute;z-index:9;bottom:3%;left:50%;transform:translateX(-50%);background:var(--paper);border:2px solid var(--border);border-radius:30px;padding:5px 16px;color:var(--title);font-size:clamp(19px,2vw,28px);font-weight:700;white-space:nowrap;max-width:96%;text-align:center}
+.selection-card{padding:26px 31px}
+.color-layout{display:grid;grid-template-columns:max-content 215px;align-items:center;gap:16px}
+.color-options h2{font-size:clamp(25px,3vw,41px);white-space:nowrap}
+.colors{display:flex;justify-content:center;flex-wrap:wrap;gap:7px;margin:19px 0 9px}
+.color-chip{position:relative;min-width:70px;padding:9px 7px;display:flex;flex-direction:column;gap:5px;align-items:center;border:2px solid var(--border);border-radius:25px;background:var(--paper);color:var(--title);font-size:20px;transition:transform .12s,box-shadow .12s;box-shadow:2px 3px 0 #92786840}
+.color-chip.clicked,.color-chip:active{transform:translate(2px,3px);box-shadow:none}
+.color-chip.selected{outline:3px solid #8bc8ed;outline-offset:2px;transform:rotate(-2deg)}
+.color-dot{background:var(--dot);height:29px;width:29px;border-radius:50%;border:2px solid white;outline:1px solid #66848f}
+.custom-chip input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}.paint-icon{font-size:28px;line-height:29px}
+.bubble-preview-area{height:220px;width:215px;display:grid;place-items:center}
+.bubble-preview-float{width:106px;height:106px;animation:bubble-floating 3.7s ease-in-out infinite}
+.bubble-preview-float canvas{width:100%;height:100%;display:block;filter:drop-shadow(0 2px 2px rgba(70,109,146,.11))}
+@keyframes bubble-floating{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-8px) rotate(2deg)}}
+.message-card .message-body p{margin:7px 0 12px}
+
+
+
+
+.settings-dialog{font-family:var(--font);background:var(--paper);color:var(--title);border:3px solid var(--border);border-radius:23px;width:min(430px,94vw);max-height:90dvh;overflow:auto;padding:20px;box-shadow:0 20px 70px #39515370}
+.settings-dialog::backdrop{background:#87b8d766}.dialog-heading{display:flex;align-items:center;justify-content:space-between}.dialog-heading h2{font-size:32px;margin:0}.dialog-heading button{border:0;background:transparent;color:var(--title);font-size:28px}.settings-dialog label{display:block;font-size:21px;margin-top:15px}.settings-dialog output{float:right}.settings-dialog input[type=range]{width:100%;accent-color:var(--title)}
+.toast{position:absolute;z-index:40;left:50%;top:18px;transform:translateX(-50%);opacity:0;pointer-events:none;background:var(--paper);border:2px solid var(--border);border-radius:22px;padding:6px 21px;box-shadow:3px 4px 0 #92786850;font-size:23px;color:var(--title);white-space:nowrap;transition:opacity .15s}.toast.show{opacity:1}
+@media(max-width:800px){.color-layout{grid-template-columns:1fr;gap:0}.bubble-preview-area{grid-row:1;width:100%;height:130px}.bubble-preview-float{width:87px;height:87px}.selection-card{padding:17px}.paper-box{padding:18px 22px}.form-box label{font-size:19px}.score-cloud{right:6px;top:7px}.score-cloud strong{font-size:32px}.timer-cloud{right:6px;top:103px}.mini-controls{left:7px;top:7px;flex-direction:column;align-items:flex-start;gap:3px}}
+@media(max-width:490px){.paper-box h1,.paper-box h2{font-size:clamp(21px,6vw,30px)}.paper-box p{font-size:clamp(13px,4vw,20px)}.paper-button{font-size:19px}.age-box small{font-size:12px}.color-chip{font-size:16px;min-width:57px}.color-options h2{font-size:clamp(19px,5vw,28px)}.soap{width:clamp(150px,40vw,210px)}.toast{font-size:18px}}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+
+/* Restored from the original uploaded design: subtle inner dashed pencil-style border. */
+
+/* Preserve the current two-column color preview and content-fitting message widths. */
+.selection-card{width:min(780px,94vw);max-width:calc(100vw - 28px)}
+.form-box{width:min(620px,94vw)}
+.message-card{width:max-content;max-width:calc(100vw - 36px);min-width:0}
+.memory-card{width:max-content;max-width:94vw}
+
+@media(max-width:800px){.selection-card{width:min(590px,94vw)}}
+
+.message-card .message-body .sentence{white-space:nowrap;max-width:none;}
+#messageContinue:disabled{opacity:1;cursor:default;filter:none;}
+#messageContinue:disabled:hover,#messageContinue:disabled:active{transform:none;box-shadow:3px 4px 0 #9278687a;}
+
+/* Instruction gesture visualization. */
+.gesture-demo{display:block;width:256px;height:160px;margin:0 auto}
+
+@media(max-width:490px){.gesture-demo{width:160px;height:100px}}
+
+/* V10 — 3.5-second pinch-only tutorial, keeping the approved rounded panels. */
+.gesture-guide{position:absolute;inset:0;z-index:25;display:flex;align-items:center;justify-content:center;
+  padding:16px;pointer-events:none;background:rgba(208,233,252,.18);backdrop-filter:blur(2px)}
+.gesture-guide-card{width:min(710px,calc(100vw - 32px));overflow:visible;padding:23px 24px 21px}
+.gesture-guide-card h2{font-size:clamp(24px,3vw,39px);margin-bottom:11px}
+.gesture-guide-grid{display:grid;grid-template-columns:1fr;gap:8px;align-items:center;justify-items:center}
+.gesture-guide-way{display:flex;align-items:center;flex-direction:column;gap:2px;color:var(--title)}
+.gesture-guide-way canvas{width:min(100%,310px);height:190px;object-fit:contain}
+.gesture-guide-way strong{font-size:clamp(20px,2.2vw,28px);white-space:nowrap}
+.gesture-guide-card .guide-footer{font-size:clamp(17px,2vw,23px);margin:7px 0;color:var(--text);white-space:nowrap}
+.guide-progress-track{height:7px;overflow:hidden;border-radius:20px;background:#d6e9f8;margin:11px 9% 0}
+.guide-progress-fill{display:block;height:100%;width:0;background:#79c3e3;border-radius:20px}
+@media(max-width:560px){.gesture-guide-grid{gap:4px}.gesture-guide-way canvas{height:145px}
+ .gesture-guide-card{padding:15px}.gesture-guide-way strong{font-size:17px}.gesture-guide-card .guide-footer{font-size:16px}}
+
+
+/* V11 — Minimal full-webcam pinch navigation, like the approved paper UI */
+.navigation-card{width:min(660px,94vw)}
+.navigation-card canvas{width:236px;max-width:100%;height:150px;display:block;margin:0 auto}
+.navigation-card p{margin:6px 0;font-size:clamp(17px,2.05vw,24px)}
+.finger-marker{position:absolute;z-index:70;width:15px;height:15px;left:0;top:0;border-radius:50%;
+  background:#f49aaa;border:2.5px solid #fffdfd;box-shadow:0 0 0 1.8px #cc7293,0 1px 6px #ee8aafd9;
+  transform:translate(-50%,-50%);pointer-events:none;will-change:left,top}
+.index-marker{background:#f5a0bd}
+.mini-controls{display:flex;flex-direction:row;flex-wrap:wrap;gap:5px;align-items:center;max-width:min(340px,55vw)}
+.mini-controls .sketch-tab{min-width:0;padding:5px 9px;line-height:1.05;font-size:clamp(16px,1.6vw,20px);
+  border-radius:18px 15px 19px 14px;box-shadow:2px 3px 0 #92786845}
+.mini-controls .sketch-tab:disabled{opacity:.55;cursor:default}
+.mini-controls .sketch-tab.hand-hover,.paper-button.hand-hover,.color-chip.hand-hover,.extra-color.hand-hover{
+  outline:3px dashed #f49aaa;outline-offset:3px;transform:translateY(-2px)}
+.extra-colors{display:grid;grid-template-columns:repeat(5,36px);gap:8px;justify-content:center;margin:10px 0 6px}
+.extra-color{width:36px;height:36px;border:2px solid #2b2828;border-radius:50%;background:var(--extra);box-shadow:2px 2px 0 #92786855}
+.run-history{position:absolute;top:61px;left:15px;z-index:9;width:min(170px,36vw);max-height:245px;
+  overflow:hidden;background:var(--paper);color:var(--title);border:2px solid var(--border);border-radius:20px 17px 23px 16px;
+  box-shadow:3px 4px 0 #92786855;padding:7px 8px 9px;font-size:clamp(14px,1.5vw,18px)}
+.record-heading{text-align:center;font-weight:700;font-size:clamp(18px,1.7vw,21px);margin-bottom:1px}
+.record-columns,.record-entry{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.record-columns{color:#7696b3;font-size:clamp(12px,1.3vw,15px);border-bottom:1px dashed #c3d6e6;margin-bottom:4px}
+.record-entry{padding:1px 0;min-height:22px}.record-entry span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left;max-width:105px}
+.record-entry strong{font-size:clamp(14px,1.5vw,18px);font-weight:700;text-align:right;flex:none}
+.record-empty{font-size:15px;text-align:center;margin:5px 0}.record-entries small{display:block;color:#7696b3;text-align:right}
+.paused-overlay{position:absolute;z-index:7;inset:0;display:flex;align-items:center;justify-content:center;
+  background:rgba(206,233,252,.20);pointer-events:none;backdrop-filter:blur(1.4px)}
+.paused-card{max-width:min(500px,85vw)}.paused-card h2{font-size:clamp(27px,3vw,38px)}.paused-card p{font-size:clamp(18px,2vw,23px)}
+@media(max-width:650px){.mini-controls{max-width:55vw;flex-direction:row;gap:3px}
+  .mini-controls .sketch-tab{padding:4px 5px;font-size:14px}
+  .run-history{top:88px;left:7px;width:min(150px,40vw);padding:5px 7px}
+  .finger-marker{width:13px;height:13px}}
+
+/* Allow browser hit-testing on the controls inside the pointer-transparent game layer. */
+.mini-controls,.mini-controls button{pointer-events:auto}
+
+/* V12: fingertip smoothing is performed in JS; show index as the only menu pointer. */
+.finger-marker{transition:none}
+.finger-marker.touching{box-shadow:0 0 0 2px #fff,0 0 0 4px #f49aaa,0 0 9px #f49aaa80}
+.navigation-card canvas{height:150px}
+
+/* V13: index-only navigation pointer is never shadowed by the game pinch dots. */
+.navigation-card{width:min(720px,94vw)}
+.navigation-card .sentence{white-space:nowrap;max-width:100%}
+
+/* V14: 500ms index fingertip dwell progress, independent from bubble pinch. */
+.index-marker.dwell-active::after{
+  content:'';position:absolute;inset:-9px;border-radius:50%;
+  background:conic-gradient(#f49aaa 0deg var(--dwell-angle,0deg),transparent var(--dwell-angle,0deg) 360deg);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));
+  pointer-events:none;
+}
+
+/* V15 — 0.25s dwell plus physical mouse; bubble-only finale */
+.mini-controls{max-width:min(510px,64vw)}
+.mini-controls .sketch-tab{font-size:clamp(14px,1.4vw,19px)}
+.run-history{top:72px;}
+.record-entry{justify-content:flex-start;}
+.record-entry span:not(.record-star){flex:1;min-width:0;}
+.record-entry strong{margin-left:auto;}
+.record-star{font-size:17px;flex:none!important;width:15px;line-height:1;display:inline-block;text-shadow:0 1px 1px #7669a022;}
+.record-star.gold{color:#e9b83e}
+.record-star.silver{color:#a6b5c5}
+.record-star.bronze{color:#bf8350}
+.random-chip.selected{outline:3px solid #8bc8ed;outline-offset:2px}
+.random-chip{min-width:87px;justify-content:center}
+.result-card{width:min(580px,94vw);padding:25px}
+.result-detail{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:17px 0}
+.result-detail div{border:2px dashed #bfd9ed;border-radius:20px;padding:12px 8px;display:flex;flex-direction:column;color:var(--title);font-size:19px}
+.result-detail strong{font-size:33px}
+.result-total{background:#e9f5ff;border:2px solid #8cc7ef;border-radius:19px;padding:12px;color:var(--title);font-size:25px}
+.result-total strong{font-size:42px;margin:0 8px}
+.result-buttons{display:flex;gap:7px;justify-content:center;flex-wrap:wrap}
+@media(max-width:650px){.mini-controls{max-width:73vw}.mini-controls .sketch-tab{font-size:12px;padding:4px}.run-history{top:100px}}
+
+.world[data-scene="result"] .giant-background{opacity:1}
+.world[data-scene="burst"] .giant-background{opacity:1}
+
+@media(max-width:490px){.little-caption{font-size:12px;max-width:calc(100vw - 12px);padding:4px 7px;overflow:hidden;text-overflow:ellipsis}}
+
+
+/* V16: restart from the genuine first permission screen, available on every
+   screen from Stage 1 onward (including messages and the final scoreboard). */
+.home-reset-button{
+  position:absolute;z-index:36;left:clamp(9px,1.4vw,20px);bottom:clamp(10px,2vw,22px);
+  margin:0;min-height:43px;padding:6px 14px;font-size:clamp(15px,1.6vw,20px);
+  box-shadow:3px 4px 0 #92786865;pointer-events:auto
+}
+@media(max-width:580px){.home-reset-button{font-size:14px;min-height:36px;padding:5px 10px;bottom:10px;left:8px}}
+
+/* V16: go-back transition: three seconds of softly scattered Bubble1 artwork
+   and background blur, without changing the game background or score. */
+.back-transition{
+  position:absolute;z-index:39;inset:0;overflow:hidden;display:grid;place-items:center;
+  background:rgba(195,226,249,.28);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  pointer-events:auto
+}
+.back-transition-bubbles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.rewind-bubble{
+  position:absolute;display:block;border-radius:50%;
+  background:url('./assets/Bubble1.png') center / contain no-repeat;
+  opacity:0;filter:drop-shadow(0 0 3px rgba(74,140,200,.7));
+  border:1px solid rgba(131,184,224,.36);animation:rewind-floating 2s ease-in-out both;
+  will-change:transform,opacity
+}
+@keyframes rewind-floating{
+  0%{opacity:0;transform:translate(0,55px) scale(.25)}
+  23%{opacity:.8}
+  68%{opacity:.76}
+  100%{opacity:0;transform:translate(var(--bubble-dx),var(--bubble-dy)) scale(1.35)}
+}
+.back-transition-card{width:max-content;max-width:calc(100vw - 40px);z-index:1;padding:22px 30px;overflow:hidden}
+.back-transition-card p{font-size:clamp(20px,2.6vw,30px);margin:3px 0;white-space:nowrap;color:var(--title)}
+
+/* V16: don't expose the random bubble color before the user presses Confirm. */
+.random-preview-placeholder{
+  color:var(--title)!important;font-size:clamp(18px,2vw,24px)!important;
+  line-height:1.5;text-align:center;max-width:200px;margin:0 auto!important
+}
+
+/* V16: final notification has the exact same paper border, pale interior,
+   uneven corners, padding, handwriting and shadow as introductory notifications. */
+.result-card{
+  width:min(590px,calc(100vw - 32px));
+  padding:clamp(21px,3.5vw,35px);
+  border:3px solid var(--border);
+  border-radius:32px 23px 29px 18px;
+  background:var(--paper);
+  box-shadow:5px 8px 0 #80665050,0 22px 80px #4a6f7547;
+}
+.result-card h2{color:var(--title);font-size:clamp(27px,3.4vw,48px);margin:0 0 12px}
+.result-card .result-message{color:var(--text);font-size:clamp(18px,2vw,27px);margin:4px 0 14px}
+.result-card .final-total{
+  color:var(--title);font-weight:700;font-size:clamp(22px,2.5vw,32px);margin:7px 0;
+}
+.final-total strong{font-size:clamp(31px,4vw,46px);margin:0 6px}
+.result-card .final-rank{color:var(--text);font-size:clamp(19px,2vw,25px);font-weight:700;margin:8px 0 15px}
+.full-ranking{border:2px solid #a8c7db;border-radius:20px 17px 23px 16px;overflow:hidden;color:var(--title);text-align:left}
+.full-ranking-head,.final-ranking-row{display:grid;grid-template-columns:58px minmax(0,1fr) 86px;align-items:center;gap:10px;padding:5px 12px}
+.full-ranking-head{color:#507b9e;font-size:clamp(15px,1.6vw,20px);font-weight:700;border-bottom:1px dashed #bad0e3;background:#edf7ff}
+.full-ranking-head span:last-child{text-align:right}
+.full-ranking-list{max-height:min(31dvh,275px);overflow-y:auto;overscroll-behavior:contain;scrollbar-color:#a7cde7 #f6faff;padding-bottom:34px}
+.final-ranking-row{font-size:clamp(17px,1.8vw,22px);min-height:34px;border-bottom:1px dashed #d0e2ee}
+.final-ranking-row:last-child{border-bottom:none}
+.final-ranking-row.is-current{background:#e6f3fd}
+.final-ranking-row.is-current .final-name strong{font-weight:700;color:#1c669e;text-decoration:underline;text-underline-offset:3px}
+.final-ranking-row .final-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.final-ranking-row .final-points{text-align:right;white-space:nowrap}
+.result-buttons{display:flex;gap:7px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+.result-buttons .paper-button{margin:6px 2px 3px}
+@media(max-width:500px){
+  .full-ranking-head,.final-ranking-row{grid-template-columns:42px minmax(0,1fr) 67px;gap:5px;padding:5px 8px}
+  .full-ranking-list{max-height:min(32dvh,245px)}
+  .result-card{padding:18px 15px}
+  .result-buttons .paper-button{font-size:17px;min-height:39px;padding:7px 12px}
+}
+
+/* V17: center the "다른 색" label exactly like "랜덤 색" in the color row. */
+.color-chip.custom-chip,
+.color-chip.random-chip{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  text-align:center;
+  line-height:1.2;
+}
